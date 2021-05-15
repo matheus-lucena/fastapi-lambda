@@ -23,7 +23,7 @@ resource "aws_api_gateway_method" "lambda" {
 }
 
 # Integration between lambda and terraform
-resource "aws_api_gateway_integration" "redirect" {
+resource "aws_api_gateway_integration" "integration" {
   rest_api_id = aws_api_gateway_rest_api.api.id
   resource_id = aws_api_gateway_resource.lambda.id
   http_method = aws_api_gateway_method.lambda.http_method
@@ -35,6 +35,11 @@ resource "aws_api_gateway_integration" "redirect" {
 
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.api.id
+
+  depends_on = [
+    aws_api_gateway_method.lambda,
+    aws_api_gateway_integration.integration
+  ]
 
   lifecycle {
     create_before_destroy = true

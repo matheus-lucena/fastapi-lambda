@@ -8,3 +8,6 @@
 # python cache
 *.pyc
 __pycache__
+
+# zip folder
+./zips

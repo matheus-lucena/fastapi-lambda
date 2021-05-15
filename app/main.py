@@ -4,7 +4,7 @@ import os
 import boto3
 from fastapi.responses import JSONResponse
 
-def add_faces_to_collection(bucket,photo, ExternalImageId):    
+def add_faces_to_collection(bucket, photo, ExternalImageId):    
     client=boto3.client('rekognition')
     response=client.index_faces(CollectionId=os.environ['CollectionID'],
         Image={'S3Object':{'Bucket':bucket,'Name':photo}},
@@ -15,14 +15,11 @@ def add_faces_to_collection(bucket,photo, ExternalImageId):
 
     return len(response['FaceRecords'])
 
-def search_faces_by_image(bucket,key, threshold=80, region="us-east-1"):
+def search_faces_by_image(contents, threshold=80, region="us-east-1"):
 	rekognition = boto3.client("rekognition", region)
 	response = rekognition.search_faces_by_image(
 		Image={
-			"S3Object": {
-				"Bucket": bucket,
-				"Name": key,
-			}
+            "Bytes": contents
 		},
         MaxFaces=6,
 		CollectionId=os.environ['CollectionID'],
@@ -38,11 +35,7 @@ app = FastAPI(
 
 ROUTER = APIRouter()
 
-@ROUTER.get("/", tags=["order"])
-async def main_route():
-    return "ok"
-
-@ROUTER.post("/register", tags=["order"])
+@ROUTER.post("/register")
 async def main_route(name: str = Form(...), image: UploadFile = File(...)):
     s3=boto3.resource('s3')
     bucketName = os.environ['BucketName']
@@ -50,13 +43,10 @@ async def main_route(name: str = Form(...), image: UploadFile = File(...)):
     add_faces_to_collection(bucketName, image.filename, name)
     return JSONResponse(content={"status": "success"})
 
-@ROUTER.post("/recognize", tags=["order"])
+@ROUTER.post("/recognize")
 async def recognize_route(image: UploadFile = File(...)):
-    s3=boto3.resource('s3')
-    bucketName = os.environ['BucketName']
-    KeyFile = f"recognize_{image.filename}"
-    s3_response = s3.Bucket(bucketName).put_object(Key=KeyFile, Body=image.file)
-    return JSONResponse(content=search_faces_by_image(bucket=bucketName, key=KeyFile))
+    contents = image.file.read()
+    return JSONResponse(content=search_faces_by_image(contents))
 
 app.include_router(ROUTER, prefix='/api')
 

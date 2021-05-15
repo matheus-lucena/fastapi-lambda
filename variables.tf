@@ -1,6 +1,6 @@
 variable "project_name" {
   description = "The name of the project"
-  default="teste-faceee"
+  default="NAME_OF_PROJECT"
 }
 
 variable "memory" {
@@ -9,5 +9,5 @@ variable "memory" {
 }
 
 variable "collection_id" {
-  default = "collection_teste"
+  default = "COLLECTION_GENERATED_CLI"
 }
